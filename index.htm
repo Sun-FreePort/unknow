@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Government Demo</title>
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div id="app" class="container">
+    <div class="row news">
+        <h3>时事 <small class="sub-info">庆历 {{system.time.year}} 年 {{system.time.month}} 月</small></h3>
+        <p>{{message1}}</p>
+        <p>{{message2}}</p>
+        <p>{{message3}}</p>
+        <p>{{message4}}</p>
+        <p>{{message5}}</p>
+    </div>
+
+    <div class="row">
+        <h3>政府</h3>
+        <p>现金储备：{{government.cash | intFix}}</p>
+    </div>
+
+    <div class="row">
+        <h3>社会</h3>
+        <p>社会人口：{{public.people | intFix}}</p>
+        <p>社会：{{public.cash | intFix}}</p>
+    </div>
+
+    <div class="row">
+        <h3>政令</h3>
+        <p>
+            <button v-on:click="addRoad(0)">修路（村道）</button>
+            <button v-on:click="addRoad(1)">修路（镇道）</button>
+            <button v-on:click="addRoad(2)">修路（县级公路）</button>
+        </p>
+        <p>
+            <button v-on:click="changeTax(1)">调整纳税比例（+1%）</button>
+            <button v-on:click="changeTax(-1)">调整纳税比例（-1%）</button>
+        </p>
+    </div>
+</div>
+
+<script src="vue.js"></script>
+<script src="Chart.min.js"></script>
+<script src="vue-chartjs.min.js"></script>
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            message1: '欢迎，就任总统的第一天，感受如何？',
+            message2: '　',
+            message3: '　',
+            message4: '　',
+            message5: '　',
+            system: {
+                time: {
+                    year: 40 + Math.floor(Math.random() * 10),
+                    month: Math.floor(Math.random() * 8) + 1,
+                },
+            },
+            government: {
+                cash: Math.random() * 200 + 1000,
+                taxRate: 0.07,
+            },
+            public: {
+                people: Math.random() * 1200 + 10000,
+                cash: Math.random() * 370000 + 1000000,
+            },
+        },
+        created: function() {
+            clearInterval(this.timer)
+            this.timer = null
+            this.setTimer()
+        },
+        methods: {
+            setTimer() {
+                if(this.timer == null) {
+                    this.timer = setInterval( () => {
+                        console.log('一个月过去了')
+                        let intFix = this.$options.filters['intFix']
+
+                        this.system.time.month++
+
+                        // 居民波动
+                        this.public.people *= 1.001 + Math.random() * 0.001
+
+                        // 货币波动
+                        let moneyChange = 0
+                        this.public.cash -= moneyChange
+                        this.government.cash += moneyChange
+                        if (Math.abs(moneyChange) > 99) {
+                            this.addMessage("中央银行投放了 " + intFix(moneyChange) + "元的货币。")
+                        }
+
+                        if (this.system.time.month > 12) {
+                            this.system.time.month = 1
+                            this.system.time.year++
+
+                            // 发薪日
+                            let cashWages = 0
+                            let official = this.public.people * 0.02
+
+                            cashWages += official * 40
+
+                            this.public.cash += cashWages
+                            this.government.cash -= cashWages
+                            this.addMessage(
+                                "新年到了！人们享受着难得的长假。与此同时，政府按 40 元/人每年的标准值，发放了新一年的薪资，合计支出 " + intFix(cashWages) + "元。")
+                        } else if (this.system.time.month === 12) {
+                            // 税收
+                            let cashAdd = 0
+                            let peopleCost = this.public.cash / this.public.people
+
+                            if (peopleCost > 100) {
+                                cashAdd += 10 * this.public.people * this.government.taxRate
+                                peopleCost -= 10
+                            }
+
+                            cashAdd += peopleCost * 0.3 * this.public.people * this.government.taxRate
+
+                            this.public.cash -= cashAdd
+                            this.government.cash += cashAdd
+                            this.addMessage("临近年末，本年的税赋统计完毕，政府整体税收达到了 " + intFix(cashAdd) + "元。")
+                        }
+
+                    }, 1500)
+                }
+            },
+            addRoad: function (level) {
+                let intFix = this.$options.filters['intFix']
+                let LEVEL = [
+                    {
+                        cost: 800,
+                        infoPrefix: "政府投资 ",
+                        infoSuffix: "元经费，一条村庄小道正在建设中",
+                    }, {
+                        cost: 4700,
+                        infoPrefix: "政府投资 ",
+                        infoSuffix: "元经费，一条砾石路正在建设中",
+                    }, {
+                        cost: 33000,
+                        infoPrefix: "政府投资 ",
+                        infoSuffix: "余元经费，一条县级公路正在建设中",
+                    },
+                ]
+                LEVEL[level].cost *= 1 + Math.random() * 5 / 100
+
+                if (this.government.cash < LEVEL[level].cost)
+                    return this.addMessage("传闻称，政府试图投资建设一条公路，但因财政困难，无疾而终。")
+
+                this.public.cash += LEVEL[level].cost
+                this.government.cash -= LEVEL[level].cost
+                this.addMessage(LEVEL[level].infoPrefix + intFix(LEVEL[level].cost) + LEVEL[level].infoSuffix)
+            },
+            changeTax: function (change) {
+                let intFix = this.$options.filters['intFix']
+
+                this.government.taxRate = Math.round(this.government.taxRate * 100 + change) / 100
+
+                let suffixInfo = ''
+                if (change > 0) {
+                    if (this.government.taxRate > 10) {
+                        suffixInfo = '税收进一步加重，令社会各界议论纷纷。'
+                    } else {
+                        suffixInfo = '一位希望匿名的商界人士对媒体表示担忧。'
+                    }
+                    this.addMessage("政府上调税赋征收比例，目前为 " + (this.government.taxRate * 100).toFixed(0) + "%，" + suffixInfo)
+                } else {
+                    if (this.government.taxRate > 10) {
+                        suffixInfo = '面对税率是否仍然过高的诘问，知名经济学家犀利反驳引起主流媒体叫好。'
+                    } else {
+                        suffixInfo = '各界人士纷纷表示：这是促进社会发展的重大利好。'
+                    }
+                    this.addMessage("政府下调税赋征收比例，目前为 " + (this.government.taxRate * 100).toFixed(0) + "%，" + suffixInfo)
+                }
+            },
+            addMessage: function (news) {
+                this.message5 = this.message4
+                this.message4 = this.message3
+                this.message3 = this.message2
+                this.message2 = this.message1
+                this.message1 = news
+            },
+        },
+        filters: {
+            intFix: function (value) {
+                if (!value) return 0
+                let valueAbs = Math.abs(value)
+                if (valueAbs > 100000000) {
+                    value = (value / 100000).toFixed(1) + ' 亿'
+                } else if (valueAbs > 10000) {
+                    value = (value / 10000).toFixed(1) + ' 万'
+                } else {
+                    value = Math.floor(value) + ' '
+                }
+
+                return value
+            },
+        }
+    })
+</script>
+</body>
+</html>

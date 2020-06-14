@@ -1,0 +1,20 @@
+.container {
+    display: flex;
+    flex-direction: row;
+}
+
+.row {
+    flex-direction: column;
+    align-items: flex-start;
+    flex-grow: 1;
+    margin: 10px;
+}
+
+.news {
+    flex: 0 0 500px;
+    padding-left: 40px;
+}
+
+.sub-info {
+    color: #1b6d85
+}
