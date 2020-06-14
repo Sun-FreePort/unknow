@@ -10,6 +10,13 @@
 </head>
 <body>
 <div id="app" class="container">
+    <div>
+        <!-- TODO: 左右上下按钮，用来移动当前显示的地图 -->
+        <canvas id="map" width="150" height="150">
+            您的浏览器尚未支持 Canvas 绘图功能 (Not support canvas tag and function in explore)
+        </>
+    </div>
+
     <div class="row news">
         <h3>时事 <small class="sub-info">庆历 {{system.time.year}} 年 {{system.time.month}} 月</small></h3>
         <p>{{message1}}</p>
@@ -48,6 +55,22 @@
 <script src="Chart.min.js"></script>
 <script src="vue-chartjs.min.js"></script>
 <script>
+    window.onload = function () {
+        /* 渲染 Canvas 地图 */
+        let canvas = document.getElementById('map');
+        if (!canvas.getContext) {
+            alert('浏览器不支持 Canvas 绘图，游戏加载失败。');
+
+            return false;
+        }
+        let ctx = canvas.getContext('2d');
+
+        ctx.fillStyle = "#b14242";
+        ctx.fillRect (40, 20, 10, 10);
+
+        return canvas;
+    }
+
     var app = new Vue({
         el: '#app',
         data: {
