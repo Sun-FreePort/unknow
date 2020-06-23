@@ -55,21 +55,21 @@
 <script src="Chart.min.js"></script>
 <script src="vue-chartjs.min.js"></script>
 <script>
-    window.onload = function () {
-        /* 渲染 Canvas 地图 */
-        let canvas = document.getElementById('map');
-        if (!canvas.getContext) {
-            alert('浏览器不支持 Canvas 绘图，游戏加载失败。');
+    // window.onload = function () {
+    //     /* 渲染 Canvas 地图 */
+    //     let canvas = document.getElementById('map');
+    //     if (!canvas.getContext) {
+    //         alert('浏览器不支持 Canvas 绘图，游戏加载失败。');
 
-            return false;
-        }
-        let ctx = canvas.getContext('2d');
+    //         return false;
+    //     }
+    //     let ctx = canvas.getContext('2d');
 
-        ctx.fillStyle = "#b14242";
-        ctx.fillRect (40, 20, 10, 10);
+    //     ctx.fillStyle = "#b14242";
+    //     ctx.fillRect (40, 20, 10, 10);
 
-        return canvas;
-    }
+    //     return canvas;
+    // }
 
     var app = new Vue({
         el: '#app',
@@ -100,7 +100,14 @@
             this.setTimer()
         },
         methods: {
-            setTimer() {
+            checkNaN (value = NaN, path = 'unknow') {
+                if (isNaN(value)) {
+                    value = 0;
+                    // TODO: 对服务端，新增一个错误日志
+                    console.warning(path);
+                }
+            },
+            setTimer () {
                 if(this.timer == null) {
                     this.timer = setInterval( () => {
                         console.log('一个月过去了')
